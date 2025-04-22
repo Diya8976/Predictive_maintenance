@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📡 Real-Time Anomaly Detection Dashboard</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css"/>
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+    h2, h4 {
+      color: #343a40;
+    }
+    img {
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+    }
+    .table-container {
+      overflow-x: auto;
+    }
+    #failure-btn {
+      margin-top: 40px;
+    }
+    #mode-select {
+      width: 200px;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-4">
+    <h3>📊 Anomaly and Failure Graph</h3>
+
+    <!-- View mode selector -->
+    <!--<div class="form-group">
+      <label for="mode-select"><strong>View Mode:</strong></label>
+      <select class="form-control" id="mode-select">
+        <option value="raw">Raw (Live)</option>
+        <option value="hourly">Hourly Aggregated</option>
+      </select>
+    </div>-->
+
+    <!-- Live graph -->
+    <img id="live-graph" src="{{ url_for('sensor_graph') }}?mode=raw" alt="Anomaly Graph" class="img-fluid">
+
+    <h2 class="mb-4 text-center">⚙️ Real-Time Sensor Anomaly Dashboard</h2>
+
+    <!--<h4 class="mt-4">📋 Latest Sensor Readings</h4>
+    <div class="table-container">
+      {{ table|safe }}
+    </div>-->
+
+    <div class="text-center" id="failure-btn">
+      <button onclick="triggerFailure()" class="btn btn-danger btn-lg">🚨 Trigger Failure Detection</button>
+    </div>
+
+    <div id="failure-result" class="mt-4 text-center"></div>
+  </div>
+
+  <script>
+    // Trigger failure detection
+    function triggerFailure() {
+      fetch('/detect_failures', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+          const resultDiv = document.getElementById("failure-result");
+          if (data.status === "alerts_sent") {
+            resultDiv.innerHTML = `
+              <div class="alert alert-danger">
+                <strong>🚨 Failures Detected:</strong><br/>
+                <pre>${JSON.stringify(data.alerts, null, 2)}</pre>
+              </div>
+            `;
+          } else {
+            resultDiv.innerHTML = `
+              <div class="alert alert-success">✅ No failures detected.</div>
+            `;
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById("failure-result").innerHTML = `
+            <div class="alert alert-warning">⚠️ Error running detection.</div>
+          `;
+        });
+    }
+
+    // Change graph on mode switch
+    document.getElementById("mode-select").addEventListener("change", function () {
+      const mode = this.value;
+      const img = document.getElementById("live-graph");
+      img.src = "{{ url_for('sensor_graph') }}?mode=" + mode + "&t=" + new Date().getTime();
+    });
+
+    // Auto-refresh every 30 seconds
+    setInterval(() => {
+      const mode = document.getElementById("mode-select").value;
+      const img = document.getElementById("live-graph");
+      img.src = "{{ url_for('sensor_graph') }}?mode=" + mode + "&t=" + new Date().getTime();
+    }, 30000);
+  </script>
+</body>
+</html>

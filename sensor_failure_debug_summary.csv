@@ -1,0 +1,2 @@
+sensorid,total_rows,failures_detected,value_min,value_max,lower_limit,upper_limit
+1,62629,526,6.886154652,149.6018219,[7.96906],[40.4387]
